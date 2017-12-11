@@ -10,7 +10,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "postinstall": "git submodule update --remote --force && cp -r create-react-app/packages/react-script ./ && cd react-scripts && npm install"
+    "postinstall": "git submodule update --remote --force && cp -r create-react-app/packages/react-scripts ./ && cd react-scripts && npm install"
   },
   "keywords": [
     "parity",
