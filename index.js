@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 // Copyright 2015-2017 Parity Technologies (UK) Ltd.
 // This file is part of Parity.
 
@@ -16,4 +17,7 @@
 
 'use strict';
 
-require('./create-react-app/packages/react-scripts/bin/react-scripts');
+// Do not use React-Script own paths
+process.env.RS_SKIP_OWN = 1;
+
+require('./react-scripts/bin/react-scripts');
