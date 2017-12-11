@@ -1,0 +1,25 @@
+{
+  "name": "parity-react-dapp",
+  "version": "0.1.0",
+  "description": "An extension of Create-React-App for Parity-Dapps",
+  "engines": {
+    "node": ">=8"
+  },
+  "bin": {
+    "parity-react-dapp": "./index.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "cd create-react-app && npm install"
+  },
+  "keywords": [
+    "parity",
+    "react",
+    "dapps"
+  ],
+  "author": "Parity Team <admin@parity.io>",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "release-it": "5.0.0"
+  }
+}
