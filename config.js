@@ -17,6 +17,10 @@
 'use strict';
 
 const path = require('path');
+const paths = require('./react-scripts/config/paths');
+
+const IS_PROD = process.env.NODE_ENV === 'production';
+const appPackage = require(paths.appPackageJson);
 
 module.exports = {
   devPort: 3001,
@@ -24,5 +28,15 @@ module.exports = {
   babel: {
     babelrc: false,
     presets: [ path.resolve(__dirname, './babel-preset.js') ],
-  }
+  },
+  htmlPlugin: {
+    template: path.resolve(__dirname, './app.index.ejs'),
+    injectParity: !IS_PROD,
+    title: appPackage.description,
+  },
+  postcssPlugins: [
+    require('postcss-import'),
+    require('postcss-nested'),
+    require('postcss-simple-vars'),
+  ],
 };
