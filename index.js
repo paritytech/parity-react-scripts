@@ -38,7 +38,7 @@ if (process.argv[2] === 'lint') {
   process.env.CONFIG = path.resolve(__dirname, 'config.js');
 
   // Run the main React Scripts
-  require('./react-scripts/bin/react-scripts');
+  require('react-scripts-config/bin/react-scripts');
 }
 
 async function aspawn (command, args) {

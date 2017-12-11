@@ -17,7 +17,7 @@
 'use strict';
 
 const path = require('path');
-const paths = require('./react-scripts/config/paths');
+const paths = require('react-scripts-config/config/paths');
 
 const IS_PROD = process.env.NODE_ENV === 'production';
 const appPackage = require(paths.appPackageJson);

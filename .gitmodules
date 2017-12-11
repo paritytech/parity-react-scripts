@@ -1,4 +1,0 @@
-[submodule "create-react-app"]
-	path = create-react-app
-	url = git@github.com:paritytech/create-react-app.git
-  branch = config
