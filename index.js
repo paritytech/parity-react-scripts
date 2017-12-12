@@ -17,20 +17,24 @@
 
 'use strict';
 
+const chalk = require('chalk');
 const path = require('path');
-const { spawn } = require('child_process');
-const ora = require('ora');
-const fs = require('fs-extra');
 
-const DAPP_DIRECTORY = fs.realpathSync(process.cwd());
+const lint = require('./scripts/lint');
+const publish = require('./scripts/publish');
 
-// If linting, spawn a new process and pass all the arguments
-if (process.argv[2] === 'lint') {
-  lint().catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
-} else {
+async function main () {
+  const command = process.argv[2];
+
+  // If linting, spawn a new process and pass all the arguments
+  if (command === 'lint') {
+    return lint();
+  }
+
+  if (command === 'publish') {
+    return publish();
+  }
+
   // Do not use React-Script own paths
   process.env.RS_SKIP_OWN = 1;
 
@@ -41,46 +45,7 @@ if (process.argv[2] === 'lint') {
   require('react-scripts-config/bin/react-scripts');
 }
 
-async function aspawn (command, args) {
-  return new Promise((resolve) => {
-    spawn(command, args, {
-      cwd: DAPP_DIRECTORY,
-      stdio: 'inherit'
-    }).on('exit', (code) => {
-      if (code !== 0) {
-        process.exit(code);
-      }
-
-      resolve();
-    });
-  });
-}
-
-async function lint () {
-  const args = process.argv.length > 3
-    ? process.argv.slice(3)
-    : [ 'src' ];
-
-  const dappEslint = path.resolve(DAPP_DIRECTORY, './node_modules/.bin/eslint');
-  const selfEslint = path.resolve(__dirname, './node_modules/.bin/eslint');
-
-  const dappStylelint = path.resolve(DAPP_DIRECTORY, './node_modules/.bin/stylelint');
-  const selfStylelint = path.resolve(__dirname, './node_modules/.bin/stylelint');
-
-  const eslint = fs.existsSync(dappEslint)
-    ? dappEslint
-    : selfEslint;
-
-  const stylelint = fs.existsSync(dappStylelint)
-    ? dappStylelint
-    : selfStylelint;
-
-  const spinner = ora('Linting JS').start();
-
-  await aspawn(eslint, args);
-  spinner.succeed();
-
-  spinner.start('Linting CSS');
-  await aspawn(stylelint, [ './src/**/*.css' ]);
-  spinner.succeed();
-}
+main().catch((error) => {
+  console.error(chalk.bold.red(error.message));
+  process.exit(1);
+});

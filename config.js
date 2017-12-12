@@ -27,16 +27,16 @@ module.exports = {
   openBrowser: false,
   babel: {
     babelrc: false,
-    presets: [ path.resolve(__dirname, './babel-preset.js') ],
+    presets: [ path.resolve(__dirname, './babel-preset.js') ]
   },
   htmlPlugin: {
     template: path.resolve(__dirname, './app.index.ejs'),
     injectParity: !IS_PROD,
-    title: appPackage.description,
+    title: appPackage.description
   },
   postcssPlugins: [
     require('postcss-import'),
     require('postcss-nested'),
-    require('postcss-simple-vars'),
-  ],
+    require('postcss-simple-vars')
+  ]
 };
