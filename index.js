@@ -35,6 +35,9 @@ async function main () {
     return publish();
   }
 
+  // Use relative public URLs
+  process.env.PUBLIC_URL = './';
+
   // Do not use React-Script own paths
   process.env.RS_SKIP_OWN = 1;
 
