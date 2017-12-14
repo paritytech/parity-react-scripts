@@ -71,7 +71,7 @@ async function registerUrl ({ url, owner, asDapp = false }) {
 
   options.gas = gas.mul(1.2).toFixed(0);
 
-  const spinner = ora.start(`Registering URL ${url}`);
+  const spinner = ora(`Registering URL ${url}`).start();
   const requestId = asDapp
     ? await instance.hint.postTransaction(options, values)
     : await instance.hintURL.postTransaction(options, values);
@@ -115,7 +115,7 @@ async function setMeta ({ id, key, owner, value }) {
 
   options.gas = gas.mul(1.2).toFixed(0);
 
-  const spinner = ora.start(`Registering metadata ${key}`);
+  const spinner = ora(`Registering metadata ${key}`).start();
   const requestId = await instance.setMeta.postTransaction(options, values);
 
   spinner.succeed();

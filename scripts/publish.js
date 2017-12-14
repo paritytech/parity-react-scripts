@@ -136,7 +136,7 @@ async function publish () {
 
   const { assetUrl, releaseUrl } = await release({ changelog, tagName, version, zipPath });
 
-  ora.start(`Release published at ${releaseUrl}`).succeed();
+  ora(`Release published at ${releaseUrl}`).start().succeed();
 
   const baseUrl = releaseUrl
     .replace('://github.com/', '://raw.githubusercontent.com/')
