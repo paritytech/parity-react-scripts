@@ -19,11 +19,12 @@
 
 const inquirer = require('inquirer');
 const path = require('path');
-const { spawn } = require('child_process');
 const ora = require('ora');
 const fs = require('fs-extra');
 const archiver = require('archiver');
 const ReleaseIt = require('release-it');
+
+const { release } = require('./github');
 
 const DAPP_DIRECTORY = fs.realpathSync(process.cwd());
 const BUILD_DIRECTORY = path.join(DAPP_DIRECTORY, 'build');
@@ -51,14 +52,15 @@ async function publish () {
     default: 'patch'
   } ]);
 
-  await ReleaseIt({
+  const { changelog, tagName, version } = await ReleaseIt({
     npm: {
       publish: false
     },
     github: {
       release: false
     },
-    increment: increment
+    increment: increment,
+    'dry-run': false
   });
 
   if (!await fs.exists(BUILD_DIRECTORY)) {
@@ -102,19 +104,25 @@ async function publish () {
   spinner.succeed();
 
   spinner.start('Compressing the project');
-  await zip();
+  const zipPath = await zip();
+
   spinner.succeed();
+
+  const { assetUrl, releaseUrl } = await release({ changelog, tagName, version, zipPath });
+
+  console.log(`Release published at ${releaseUrl}`);
 }
 
 async function zip () {
   return new Promise((resolve, reject) => {
-    const output = fs.createWriteStream(path.join(DAPP_DIRECTORY, 'build.zip'));
+    const filepath = path.join(DAPP_DIRECTORY, 'build.zip');
+    const output = fs.createWriteStream(filepath);
     const archive = archiver('zip', {
       zlib: { level: 9 }
     });
 
     output.on('close', () => {
-      resolve();
+      resolve(filepath);
     });
 
     archive.on('error', (error) => {

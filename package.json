@@ -52,11 +52,12 @@
     "fs-extra": "5.0.0",
     "inquirer": "^4.0.1",
     "ora": "^1.3.0",
+    "parse-repo": "^1.0.4",
     "postcss-import": "11.0.0",
     "postcss-nested": "3.0.0",
     "postcss-simple-vars": "4.1.0",
     "react-scripts-config": "1.0.17-4",
-    "release-it": "github:paritytech/release-it#no-github",
+    "release-it": "github:paritytech/release-it#9087cdb",
     "stylelint": "8.3.1",
     "stylelint-config-standard": "18.0.0"
   }
