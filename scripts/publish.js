@@ -17,6 +17,7 @@
 
 'use strict';
 
+const inquirer = require('inquirer');
 const path = require('path');
 const { spawn } = require('child_process');
 const ora = require('ora');
@@ -33,20 +34,31 @@ const PACKAGE_FILE = path.join(DAPP_DIRECTORY, 'package.json');
 /**
  * ToDo:
  *   - Check if connection to Parity node is OK
- *   - Ask what kind of release before calling Release-IT (patch, major, etc.)
  *   - Fork Release-It : don't ask for Github Release if no token, enable force push
  *   - Create a release after the zip : put the zip content hash in body ?
  *   - Update the dapp registry: if no ID in manifest, create a new one, then as usual
  */
 async function publish () {
+  const { increment } = await inquirer.prompt([ {
+    type: 'list',
+    name: 'increment',
+    message: 'Choose the release type: ',
+    choices: [
+      { name: 'Patch', value: 'patch' },
+      { name: 'Minor', value: 'minor' },
+      { name: 'Major', value: 'major' }
+    ],
+    default: 'patch'
+  } ]);
+
   await ReleaseIt({
     npm: {
-      private: true
+      publish: false
     },
     github: {
       release: false
     },
-    increment: 'patch'
+    increment: increment
   });
 
   if (!await fs.exists(BUILD_DIRECTORY)) {
@@ -57,8 +69,8 @@ async function publish () {
     throw new Error(`The manifest file at ${MANIFEST_FILE} does not exist.\nCreate it first.`);
   }
 
-  delete require.cache[require.resolve(MANIFEST_FILE)]
-  delete require.cache[require.resolve(PACKAGE_FILE)]
+  delete require.cache[require.resolve(MANIFEST_FILE)];
+  delete require.cache[require.resolve(PACKAGE_FILE)];
 
   const manifest = require(MANIFEST_FILE);
   const appPackage = require(PACKAGE_FILE);
@@ -106,7 +118,7 @@ async function zip () {
     });
 
     archive.on('error', (error) => {
-      reject(error)
+      reject(error);
     });
 
     archive.pipe(output);
