@@ -19,9 +19,13 @@
 
 const chalk = require('chalk');
 const path = require('path');
+const fs = require('fs');
 
 const lint = require('./scripts/lint');
 const publish = require('./scripts/publish');
+
+const DAPP_DIRECTORY = fs.realpathSync(process.cwd());
+const MANIFEST_FILE = path.join(DAPP_DIRECTORY, 'manifest.json');
 
 async function main () {
   const command = process.argv[2];
@@ -35,6 +39,12 @@ async function main () {
     return publish();
   }
 
+  delete require.cache[require.resolve(MANIFEST_FILE)];
+  const manifest = require(MANIFEST_FILE);
+
+  // The base public URL will be the `http://localhost:8545/:dappId/`
+  process.env.PUBLIC_URL = `/${manifest.id.replace(/^0x/, '')}`;
+
   // Do not use React-Script own paths
   process.env.RS_SKIP_OWN = 1;
 
@@ -45,7 +55,10 @@ async function main () {
   require('react-scripts-config/bin/react-scripts');
 }
 
-main().catch((error) => {
-  console.error(chalk.bold.red(error.message));
-  process.exit(1);
-});
+main()
+  .then(() => {
+    process.exit(0);
+  }).catch((error) => {
+    console.error(chalk.bold.red(error.message) + '\n');
+    process.exit(1);
+  });

@@ -20,10 +20,39 @@ const githubClient = require('release-it/lib/github-client');
 const git = require('release-it/lib/git');
 const parseRepo = require('parse-repo');
 const ora = require('ora');
+const path = require('path');
+const fs = require('fs-extra');
 
-const token = process.env.GITHUB_TOKEN;
+const argv = require('minimist')(process.argv.slice(2));
+
+async function getToken () {
+  const token = process.env.GITHUB_TOKEN;
+
+  if (token) {
+    return token;
+  }
+
+  // Pass the token containing file with `-t` or `--token`
+  if (argv.t || argv.token) {
+    const filepath = path.resolve(argv.t || argv.token);
+
+    if (!await fs.exists(filepath)) {
+      throw new Error(`The file ${filepath} does not exists.`);
+    }
+
+    const content = (await fs.readFile(filepath)).toString().split('\n')[0].trim();
+
+    if (content) {
+      return content;
+    }
+  }
+
+  throw new Error(`No Github token can be found.
+Please use the "GITHUB_TOKEN" environment variable or specify the path of a file containing the token with -t or --token.`);
+}
 
 async function release ({ changelog, tagName, version, zipPath }) {
+  const token = await getToken();
   const remoteUrl = await git.getRemoteUrl();
   const repo = parseRepo(remoteUrl);
   const github = {
@@ -47,4 +76,4 @@ async function release ({ changelog, tagName, version, zipPath }) {
   return { assetUrl, releaseUrl };
 }
 
-module.exports = { release };
+module.exports = { getToken, release };

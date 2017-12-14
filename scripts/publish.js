@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 // Copyright 2015-2017 Parity Technologies (UK) Ltd.
 // This file is part of Parity.
 
@@ -24,7 +23,9 @@ const fs = require('fs-extra');
 const archiver = require('archiver');
 const ReleaseIt = require('release-it');
 
-const { release } = require('./github');
+const { getToken, release } = require('./github');
+const { getAccounts, setup } = require('./api');
+const { getDappOwner, updateDapp } = require('./dapp-utils');
 
 const DAPP_DIRECTORY = fs.realpathSync(process.cwd());
 const BUILD_DIRECTORY = path.join(DAPP_DIRECTORY, 'build');
@@ -32,14 +33,35 @@ const BUILD_DIRECTORY = path.join(DAPP_DIRECTORY, 'build');
 const MANIFEST_FILE = path.join(DAPP_DIRECTORY, 'manifest.json');
 const PACKAGE_FILE = path.join(DAPP_DIRECTORY, 'package.json');
 
-/**
- * ToDo:
- *   - Check if connection to Parity node is OK
- *   - Fork Release-It : don't ask for Github Release if no token, enable force push
- *   - Create a release after the zip : put the zip content hash in body ?
- *   - Update the dapp registry: if no ID in manifest, create a new one, then as usual
- */
+delete require.cache[require.resolve(MANIFEST_FILE)];
+delete require.cache[require.resolve(PACKAGE_FILE)];
+
+const manifest = require(MANIFEST_FILE);
+const appPackage = require(PACKAGE_FILE);
+
+function isHex (value) {
+  return /^0x([0-9a-g]{2})*$/i.test(value);
+}
+
 async function publish () {
+  await setup();
+
+  // Verify that the Github token is available
+  await getToken();
+
+  const dappId = manifest.id;
+
+  if (!dappId || !isHex(dappId)) {
+    throw new Error('You must have the `id` field in the Manifest set to a valid dapp id. Please update.');
+  }
+
+  const dappOwner = await getDappOwner({ id: dappId });
+  const accounts = (await getAccounts()).map((a) => a.toLowerCase());
+
+  if (!accounts.includes(dappOwner.toLowerCase())) {
+    throw new Error(`This dapp is owned by ${dappOwner}, which is not in your local accounts.`);
+  }
+
   const { increment } = await inquirer.prompt([ {
     type: 'list',
     name: 'increment',
@@ -71,12 +93,6 @@ async function publish () {
     throw new Error(`The manifest file at ${MANIFEST_FILE} does not exist.\nCreate it first.`);
   }
 
-  delete require.cache[require.resolve(MANIFEST_FILE)];
-  delete require.cache[require.resolve(PACKAGE_FILE)];
-
-  const manifest = require(MANIFEST_FILE);
-  const appPackage = require(PACKAGE_FILE);
-
   const ICON_FILE = path.join(DAPP_DIRECTORY, manifest.iconUrl);
 
   if (!await fs.exists(ICON_FILE)) {
@@ -95,10 +111,20 @@ async function publish () {
   }
 
   // Copy fields from package.json file
-  manifest.author = appPackage.author;
+  manifest.author = appPackage.author || '';
   manifest.version = appPackage.version;
 
+  if (!manifest.description) {
+    manifest.description = appPackage.description || '';
+  }
+
+  if (!manifest.name) {
+    manifest.name = appPackage.name || '';
+  }
+
+  // Update the manifest file in the build folder and in the dapp root folder
   await fs.writeFile(path.join(BUILD_DIRECTORY, 'manifest.json'), JSON.stringify(manifest, null, 2));
+  await fs.writeFile(path.join(DAPP_DIRECTORY, 'manifest.json'), JSON.stringify(manifest, null, 2));
   await fs.copyFile(ICON_FILE, path.join(BUILD_DIRECTORY, manifest.iconUrl));
 
   spinner.succeed();
@@ -110,7 +136,23 @@ async function publish () {
 
   const { assetUrl, releaseUrl } = await release({ changelog, tagName, version, zipPath });
 
-  console.log(`Release published at ${releaseUrl}`);
+  ora.start(`Release published at ${releaseUrl}`).succeed();
+
+  const baseUrl = releaseUrl
+    .replace('://github.com/', '://raw.githubusercontent.com/')
+    .replace('releases/tag/', '');
+
+  const manifestUrl = `${baseUrl}/manifest.json`;
+  const imageUrl = `${baseUrl}/${manifest.iconUrl}`;
+
+  const requestIds = await updateDapp({
+    id: dappId,
+    manifest: manifestUrl,
+    image: imageUrl,
+    content: assetUrl
+  });
+
+  console.log(`  You have to accept ${requestIds.length} requests in order to finish the process.`);
 }
 
 async function zip () {

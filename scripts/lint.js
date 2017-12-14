@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 // Copyright 2015-2017 Parity Technologies (UK) Ltd.
 // This file is part of Parity.
 
