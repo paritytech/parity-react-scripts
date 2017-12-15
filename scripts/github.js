@@ -22,8 +22,25 @@ const parseRepo = require('parse-repo');
 const ora = require('ora');
 const path = require('path');
 const fs = require('fs-extra');
+const ghauth = require('ghauth');
 
 const argv = require('minimist')(process.argv.slice(2));
+
+const p = new Promise((resolve, reject) => {
+  ghauth({
+    configName: 'parity-react-scripts',
+    scopes: [ 'user' ],
+    note: 'This token is used for Github Releases'
+  }, (err, authData) => {
+    if (err) {
+      reject(err);
+    }
+
+    resolve(authData);
+  });
+});
+
+p.then(console.log).catch(console.error);
 
 async function getToken () {
   const token = process.env.GITHUB_TOKEN;
