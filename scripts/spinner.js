@@ -20,20 +20,56 @@ const ora = require('ora');
 
 let spinner = null;
 
+function trim (text) {
+  if (!text) {
+    return text;
+  }
+
+  const columns = process.stdout.columns || process.stderr.columns || 120;
+  const length = text.length + 2;
+
+  if (length <= columns) {
+    return text;
+  }
+
+  const words = text.split(/\s+/);
+  const longest = words.reduce((cur, word, index) => {
+    const l = word.length;
+
+    return (l > cur.length)
+      ? { word, index, length: l }
+      : cur;
+  }, { word: '', index: -1, length: 0 });
+
+  const toTrim = length - columns + 4;
+  const toTrimLeft = Math.floor(toTrim / 2);
+  const toTrimRight = toTrim - toTrimLeft;
+
+  const trimIndex = Math.floor(longest.length / 2);
+  const trimIndexLeft = trimIndex - toTrimLeft;
+  const trimIndexRight = trimIndex + toTrimRight;
+
+  const trimmedWord = longest.word.slice(0, trimIndexLeft) + '[..]' + longest.word.slice(trimIndexRight);
+
+  const textIndex = text.indexOf(longest.word);
+
+  return text.slice(0, textIndex) + trimmedWord + text.slice(textIndex + longest.length);
+}
+
 function fail (text) {
   if (spinner) {
-    spinner.fail(text);
+    spinner.fail(trim(text));
   }
 }
 
 function succeed (text) {
   if (spinner) {
-    spinner.succeed(text);
+    spinner.succeed(trim(text));
   }
 }
 
 function start (text) {
-  spinner = ora(text).start();
+  spinner = ora(trim(text)).start();
 
   return { succeed, fail };
 }
