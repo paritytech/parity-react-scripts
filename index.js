@@ -20,6 +20,7 @@
 const chalk = require('chalk');
 const path = require('path');
 
+const spinner = require('./scripts/spinner');
 const lint = require('./scripts/lint');
 const publish = require('./scripts/publish');
 
@@ -52,6 +53,7 @@ main()
   .then(() => {
     process.exit(0);
   }).catch((error) => {
+    spinner.fail();
     console.error(chalk.bold.red(error.message) + '\n');
     process.exit(1);
   });

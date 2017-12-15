@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Parity.  If not, see <http://www.gnu.org/licenses/>.
 
-const ora = require('ora');
+const spinner = require('./spinner');
 
 const { api, getContracts } = require('./api');
 
@@ -54,7 +54,10 @@ async function registerUrl ({ url, owner, asDapp = false }) {
   const contracts = await getContracts();
   const instance = contracts.githubHint.instance;
 
+  spinner.start(`Hashing ${url}`);
   const { hash, registered, owner: hashOwner } = await urlToHash(url);
+
+  spinner.succeed();
 
   if (registered && hashOwner.toLowerCase() !== owner.toLowerCase()) {
     throw new Error(`The URL ${url} is already registered by another user (${hashOwner}).`);
@@ -71,7 +74,7 @@ async function registerUrl ({ url, owner, asDapp = false }) {
 
   options.gas = gas.mul(1.2).toFixed(0);
 
-  const spinner = ora(`Registering URL ${url}`).start();
+  spinner.start(`Registering URL ${url}`);
   const requestId = asDapp
     ? await instance.hint.postTransaction(options, values)
     : await instance.hintURL.postTransaction(options, values);
@@ -115,7 +118,7 @@ async function setMeta ({ id, key, owner, value }) {
 
   options.gas = gas.mul(1.2).toFixed(0);
 
-  const spinner = ora(`Registering metadata ${key}`).start();
+  spinner.start(`Registering metadata ${key}`);
   const requestId = await instance.setMeta.postTransaction(options, values);
 
   spinner.succeed();

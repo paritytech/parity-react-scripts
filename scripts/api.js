@@ -19,7 +19,7 @@
 const Api = require('@parity/api');
 const Contracts = require('@parity/shared/lib/contracts').default;
 
-const chalk = require('chalk');
+const spinner = require('./spinner');
 
 const nodeUrl = 'http://localhost:8545';
 const provider = new Api.Provider.Http(nodeUrl);
@@ -27,18 +27,19 @@ const api = new Api(provider);
 
 async function setup () {
   try {
+    spinner.start('Connecting to local node');
     const blockNumber = await api.eth.blockNumber();
-    const contentHash = await api.parity.hashContent('http://github.com/paritytech');
 
-    console.log(`Connected to a local Parity node, at block ${blockNumber.toFormat()}\nHash: ${contentHash}\n`);
+    spinner.succeed(`Connected to local node (block ${blockNumber.toFormat()})`);
+
+    spinner.start('Testing the node capabilities');
+
+    await api.parity.hashContent('http://github.com/paritytech');
+    spinner.succeed('Local node has required capabilities');
   } catch (error) {
     if (error.code === 'ECONNREFUSED' || /Method not found/i.test(error.message)) {
-      console.error(chalk.bold.red(`You must have a local Parity node running at ${nodeUrl} with "--jsonrpc-apis=all" flag\n`));
-    } else {
-      console.error(chalk.bold.red(error.message));
+      throw new Error(`You must have a local Parity node running at ${nodeUrl} with "--jsonrpc-apis=all" flag`);
     }
-
-    process.exit(1);
   }
 }
 

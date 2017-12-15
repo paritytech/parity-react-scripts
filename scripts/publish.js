@@ -18,11 +18,11 @@
 
 const inquirer = require('inquirer');
 const path = require('path');
-const ora = require('ora');
 const fs = require('fs-extra');
 const archiver = require('archiver');
 const ReleaseIt = require('release-it');
 
+const spinner = require('./spinner');
 const { getToken, release } = require('./github');
 const { getAccounts, setup } = require('./api');
 const { getDappOwner, updateDapp } = require('./dapp-utils');
@@ -99,7 +99,7 @@ async function publish () {
     throw new Error(`The icon file at ${ICON_FILE} does not exist.\nCreate it first.`);
   }
 
-  const spinner = ora('Copying files').start();
+  spinner.start('Copying files');
 
   // Delete dev local_url field
   if (manifest.localUrl) {
@@ -136,7 +136,7 @@ async function publish () {
 
   const { assetUrl, releaseUrl } = await release({ changelog, tagName, version, zipPath });
 
-  ora(`Release published at ${releaseUrl}`).start().succeed();
+  spinner.start(`Release published at ${releaseUrl}`).succeed();
 
   const baseUrl = releaseUrl
     .replace('://github.com/', '://raw.githubusercontent.com/')
