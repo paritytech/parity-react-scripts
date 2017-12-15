@@ -74,8 +74,17 @@ function start (text) {
   return { succeed, fail };
 }
 
+function update (text) {
+  if (spinner) {
+    spinner.text = text;
+  } else {
+    start(text);
+  }
+}
+
 module.exports = {
   start,
   fail,
-  succeed
+  succeed,
+  update
 };

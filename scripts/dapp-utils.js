@@ -57,7 +57,7 @@ async function registerUrl ({ url, owner, asDapp = false }) {
   spinner.start(`Hashing ${url}`);
   const { hash, registered, owner: hashOwner } = await urlToHash(url);
 
-  spinner.succeed();
+  spinner.succeed(`Hashed ${url}`);
 
   if (registered && hashOwner.toLowerCase() !== owner.toLowerCase()) {
     throw new Error(`The URL ${url} is already registered by another user (${hashOwner}).`);
@@ -79,7 +79,7 @@ async function registerUrl ({ url, owner, asDapp = false }) {
     ? await instance.hint.postTransaction(options, values)
     : await instance.hintURL.postTransaction(options, values);
 
-  spinner.succeed();
+  spinner.succeed(`Registered URL ${url}`);
   return { hash, requestId };
 }
 
@@ -118,10 +118,10 @@ async function setMeta ({ id, key, owner, value }) {
 
   options.gas = gas.mul(1.2).toFixed(0);
 
-  spinner.start(`Registering metadata ${key}`);
+  spinner.start(`Sending tx for registering metadata ${key}`);
   const requestId = await instance.setMeta.postTransaction(options, values);
 
-  spinner.succeed();
+  spinner.succeed(`Sent tx for registering metadata ${key}`);
   return { requestId };
 }
 

@@ -58,8 +58,68 @@ async function getContracts () {
   return { dappReg, githubHint };
 }
 
+async function sleep (duration) {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(), duration);
+  });
+}
+
+async function waitForSigner (requestId) {
+  const txHash = await api.parity.checkRequest(requestId);
+
+  if (txHash) {
+    return txHash;
+  }
+
+  await sleep(1000);
+
+  return waitForSigner(requestId);
+}
+
+async function waitForMined (txHash) {
+  const txReceipt = await api.eth.getTransactionReceipt(txHash);
+
+  if (txReceipt && txReceipt.blockHash) {
+    return txReceipt;
+  }
+
+  await sleep(1000);
+
+  return waitForMined(txHash);
+}
+
+async function follow (requestIds) {
+  const txHashes = [];
+  let remaining = requestIds.length;
+
+  spinner.start(`Waiting for ${remaining} transactions to be signed`);
+
+  await Promise.all(requestIds.map(async (requestId) => {
+    const txHash = await waitForSigner(requestId);
+
+    remaining--;
+    txHashes.push(txHash);
+    spinner.update(`Waiting for ${remaining} transactions to be signed`);
+  }));
+
+  spinner.succeed(`All transactions signed`);
+
+  remaining = txHashes.length;
+  spinner.start(`Waiting for ${remaining} transactions to be mined`);
+
+  await Promise.all(txHashes.map(async (txHash) => {
+    await waitForMined(txHash);
+
+    remaining--;
+    spinner.update(`Waiting for ${remaining} transactions to be mined`);
+  }));
+
+  spinner.succeed(`All transactions mined`);
+}
+
 module.exports = {
   api,
+  follow,
   getAccounts,
   getContracts,
   setup

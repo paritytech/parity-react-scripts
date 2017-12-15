@@ -24,7 +24,7 @@ const ReleaseIt = require('release-it');
 
 const spinner = require('./spinner');
 const { getToken, release } = require('./github');
-const { getAccounts, setup } = require('./api');
+const { follow, getAccounts, setup } = require('./api');
 const { getDappOwner, updateDapp } = require('./dapp-utils');
 
 const DAPP_DIRECTORY = fs.realpathSync(process.cwd());
@@ -137,6 +137,7 @@ async function publish () {
   const { assetUrl, releaseUrl } = await release({ changelog, tagName, version, zipPath });
 
   spinner.start(`Release published at ${releaseUrl}`).succeed();
+  console.log('');
 
   const baseUrl = releaseUrl
     .replace('://github.com/', '://raw.githubusercontent.com/')
@@ -152,7 +153,9 @@ async function publish () {
     content: assetUrl
   });
 
-  console.log(`  You have to accept ${requestIds.length} requests in order to finish the process.`);
+  console.log(`\n  You have to accept ${requestIds.length} requests in order to finish the process.\n`);
+
+  await follow(requestIds);
 }
 
 async function zip () {
