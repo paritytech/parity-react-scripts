@@ -20,53 +20,8 @@ const githubClient = require('release-it/lib/github-client');
 const git = require('release-it/lib/git');
 const parseRepo = require('parse-repo');
 const ora = require('ora');
-const path = require('path');
-const fs = require('fs-extra');
-const ghauth = require('ghauth');
 
-const argv = require('minimist')(process.argv.slice(2));
-
-const p = new Promise((resolve, reject) => {
-  ghauth({
-    configName: 'parity-react-scripts',
-    scopes: [ 'user' ],
-    note: 'This token is used for Github Releases'
-  }, (err, authData) => {
-    if (err) {
-      reject(err);
-    }
-
-    resolve(authData);
-  });
-});
-
-p.then(console.log).catch(console.error);
-
-async function getToken () {
-  const token = process.env.GITHUB_TOKEN;
-
-  if (token) {
-    return token;
-  }
-
-  // Pass the token containing file with `-t` or `--token`
-  if (argv.t || argv.token) {
-    const filepath = path.resolve(argv.t || argv.token);
-
-    if (!await fs.exists(filepath)) {
-      throw new Error(`The file ${filepath} does not exists.`);
-    }
-
-    const content = (await fs.readFile(filepath)).toString().split('\n')[0].trim();
-
-    if (content) {
-      return content;
-    }
-  }
-
-  throw new Error(`No Github token can be found.
-Please use the "GITHUB_TOKEN" environment variable or specify the path of a file containing the token with -t or --token.`);
-}
+const { getToken } = require('./github-auth');
 
 async function release ({ changelog, tagName, version, zipPath }) {
   const token = await getToken();

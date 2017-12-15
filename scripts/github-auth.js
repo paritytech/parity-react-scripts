@@ -23,9 +23,7 @@ const config = require('./config');
 const AUTH_URL = 'https://api.github.com/authorizations';
 const GITHUB_SCOPES = [ 'repo' ];
 
-const CLIENT_ID = 'b'.padStart(20, 'a');
-
-async function connect ({ username, password, clientSecret, otp = null }) {
+async function connect ({ username, password, otp = null }) {
   const options = {
     headers: {
       'Authorization': `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`,
@@ -36,38 +34,13 @@ async function connect ({ username, password, clientSecret, otp = null }) {
     method: 'POST',
     body: JSON.stringify({
       scopes: GITHUB_SCOPES,
-      note: `Parity React Scripts (${new Date().toJSON()})`,
-      'client_id': CLIENT_ID,
-      'client_secret': clientSecret
+      note: `Parity React Scripts (${new Date().toJSON()})`
     })
   };
 
   const req = await fetch(AUTH_URL, options);
 
   return req;
-}
-
-async function isAuthorised ({ clientId, clientSecret, token }) {
-  const url = `https://api.github.com/applications/${clientId}/tokens/${token}`;
-
-  const request = await fetch(url, {
-    headers: {
-      'Authorization': `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
-      'User-Agent': 'parity-react-scripts authenticator'
-    }
-  });
-
-  if (request.status === 401) {
-    console.warn('no luck...', await request.text());
-    return false;
-  }
-
-  await check(request);
-
-  const data = await request.json();
-
-  console.warn(data);
-  return true;
 }
 
 async function check (request) {
@@ -91,16 +64,13 @@ async function check (request) {
   }
 }
 
-async function auth () {
+async function getToken () {
   const { github } = await config.read();
 
-  if (github && github.token && github.clientId && github.clientSecret) {
-    const { clientId, clientSecret, token } = github;
-    const authorized = await isAuthorised({ clientId, clientSecret, token });
+  if (github && github.token) {
+    const { token } = github;
 
-    if (authorized) {
-      return token;
-    }
+    return token;
   }
 
   const { username, password } = await inquirer.prompt([
@@ -108,8 +78,7 @@ async function auth () {
     { type: 'password', name: 'password', message: 'Enter your Github password:' }
   ]);
 
-  const clientSecret = 'a'.padStart(40, 'a');
-  let request = await connect({ username, password, clientSecret });
+  let request = await connect({ username, password });
 
   if (request.status === 401) {
     const otpHeader = request.headers.get('X-GitHub-OTP');
@@ -120,7 +89,7 @@ async function auth () {
         { type: 'input', name: 'otp', message: 'Enter your Github OTP/2FA Code:' }
       ]);
 
-      request = await connect({ username, password, otp, clientSecret });
+      request = await connect({ username, password, otp });
     }
   }
 
@@ -130,13 +99,10 @@ async function auth () {
 
   await check(request);
 
-  const { app, token } = await request.json();
-  const { client_id: clientId } = app;
+  const { token } = await request.json();
 
-  await config.write({ github: { clientId, clientSecret, username, token } });
+  await config.write({ github: { username, token } });
   return token;
 }
 
-auth().then(console.log).catch(console.error);
-
-module.exports = auth;
+module.exports = { getToken };
