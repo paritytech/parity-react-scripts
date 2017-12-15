@@ -65,6 +65,12 @@ async function sleep (duration) {
 }
 
 async function waitForSigner (requestId) {
+  // In case of an unlocked account, the request id
+  // is actually the transaction hash
+  if (requestId.length === 66) {
+    return requestId;
+  }
+
   const txHash = await api.parity.checkRequest(requestId);
 
   if (txHash) {
