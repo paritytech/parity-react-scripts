@@ -43,6 +43,8 @@ async function lint () {
     ? process.argv.slice(3)
     : [ 'src' ];
 
+  args.push('--cache');
+
   const dappEslint = path.resolve(DAPP_DIRECTORY, './node_modules/.bin/eslint');
   const selfEslint = path.resolve(__dirname, './node_modules/.bin/eslint');
 
@@ -63,7 +65,7 @@ async function lint () {
   spinner.succeed();
 
   spinner.start('Linting CSS');
-  await aspawn(stylelint, [ './src/**/*.css' ]);
+  await aspawn(stylelint, [ './src/**/*.css', '--cache' ]);
   spinner.succeed();
 }
 
