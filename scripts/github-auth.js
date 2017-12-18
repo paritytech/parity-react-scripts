@@ -23,6 +23,18 @@ const config = require('./config');
 const AUTH_URL = 'https://api.github.com/authorizations';
 const GITHUB_SCOPES = [ 'repo' ];
 
+async function isValidToken (token) {
+  const req = await fetch('https://api.github.com/user/repos', {
+    headers: {
+      'Authorization': `token ${token}`,
+      'User-Agent': 'parity-react-scripts authenticator',
+      'Content-type': 'application/json'
+    }
+  });
+
+  return req.status >= 200 && req.status < 300;
+}
+
 async function connect ({ username, password, otp = null }) {
   const options = {
     headers: {
@@ -70,7 +82,9 @@ async function getToken () {
   if (github && github.token) {
     const { token } = github;
 
-    return token;
+    if (await isValidToken(token)) {
+      return token;
+    }
   }
 
   const { username, password } = await inquirer.prompt([
