@@ -21,6 +21,7 @@ const chalk = require('chalk');
 const path = require('path');
 
 const spinner = require('./scripts/spinner');
+const init = require('./scripts/init');
 const lint = require('./scripts/lint');
 const publish = require('./scripts/publish');
 
@@ -34,6 +35,10 @@ async function main () {
 
   if (command === 'publish') {
     return publish();
+  }
+
+  if (command === 'init') {
+    return init();
   }
 
   // Use relative public URLs
