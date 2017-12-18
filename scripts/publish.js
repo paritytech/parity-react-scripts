@@ -21,6 +21,7 @@ const path = require('path');
 const fs = require('fs-extra');
 const archiver = require('archiver');
 const ReleaseIt = require('release-it');
+const semver = require('semver');
 
 const spinner = require('./spinner');
 const { getToken, release } = require('./github');
@@ -38,6 +39,7 @@ delete require.cache[require.resolve(PACKAGE_FILE)];
 
 const manifest = require(MANIFEST_FILE);
 const appPackage = require(PACKAGE_FILE);
+const appVersion = appPackage.version;
 
 function isHex (value) {
   return /^0x([0-9a-g]{2})*$/i.test(value);
@@ -49,6 +51,20 @@ async function publish () {
 
   // Verify that the Github token is available
   await getToken();
+
+  if (!await fs.exists(BUILD_DIRECTORY)) {
+    throw new Error(`The build directory ${BUILD_DIRECTORY} does not exist.\nBuild the project first.`);
+  }
+
+  if (!await fs.exists(MANIFEST_FILE)) {
+    throw new Error(`The manifest file at ${MANIFEST_FILE} does not exist.\nCreate it first.`);
+  }
+
+  const ICON_FILE = path.join(DAPP_DIRECTORY, manifest.iconUrl);
+
+  if (!await fs.exists(ICON_FILE)) {
+    throw new Error(`The icon file at ${ICON_FILE} does not exist.\nCreate it first.`);
+  }
 
   const dappId = manifest.id;
 
@@ -68,14 +84,26 @@ async function publish () {
     name: 'increment',
     message: 'Choose the release type: ',
     choices: [
+      // { name: 'Pre-Patch', value: 'prepatch' },
       { name: 'Patch', value: 'patch' },
+      // { name: 'Pre-Minor', value: 'preminor' },
       { name: 'Minor', value: 'minor' },
+      // { name: 'Pre-Major', value: 'premajor' },
       { name: 'Major', value: 'major' }
-    ],
+    ].map(({ name, value }) => ({
+      name: `${name} (v${semver.inc(appVersion, value)})`,
+      value
+    })),
     default: 'patch'
   } ]);
 
-  const { changelog, tagName, version } = await ReleaseIt({
+  const version = semver.inc(appVersion, increment);
+
+  await updateManifest(version);
+
+  spinner.start('Pushing the release to Git');
+
+  const { changelog, tagName } = await ReleaseIt({
     npm: {
       publish: false
     },
@@ -83,57 +111,31 @@ async function publish () {
       release: false
     },
     increment: increment,
+    src: {
+      commitMessage: 'Release v%s',
+      tagAnnotation: 'Release v%s',
+      tagName: 'v%s'
+    },
+
+    'non-interactive': true,
     'dry-run': false
   });
 
-  if (!await fs.exists(BUILD_DIRECTORY)) {
-    throw new Error(`The build directory ${BUILD_DIRECTORY} does not exist.\nBuild the project first.`);
-  }
-
-  if (!await fs.exists(MANIFEST_FILE)) {
-    throw new Error(`The manifest file at ${MANIFEST_FILE} does not exist.\nCreate it first.`);
-  }
-
-  const ICON_FILE = path.join(DAPP_DIRECTORY, manifest.iconUrl);
-
-  if (!await fs.exists(ICON_FILE)) {
-    throw new Error(`The icon file at ${ICON_FILE} does not exist.\nCreate it first.`);
-  }
+  spinner.succeed('Pushed the release to Git');
 
   spinner.start('Copying files');
 
-  // Delete dev local_url field
-  if (manifest.localUrl) {
-    delete manifest.localUrl;
-  }
-
-  if (manifest['local_url']) {
-    delete manifest['local_url'];
-  }
-
-  // Copy fields from package.json file
-  manifest.author = appPackage.author || '';
-  manifest.version = appPackage.version;
-
-  if (!manifest.description) {
-    manifest.description = appPackage.description || '';
-  }
-
-  if (!manifest.name) {
-    manifest.name = appPackage.name || '';
-  }
-
   // Update the manifest file in the build folder and in the dapp root folder
-  await fs.writeFile(path.join(BUILD_DIRECTORY, 'manifest.json'), JSON.stringify(manifest, null, 2));
-  await fs.writeFile(path.join(DAPP_DIRECTORY, 'manifest.json'), JSON.stringify(manifest, null, 2));
+  await fs.copyFile(path.join(DAPP_DIRECTORY, 'manifest.json'), path.join(BUILD_DIRECTORY, 'manifest.json'));
   await fs.copyFile(ICON_FILE, path.join(BUILD_DIRECTORY, manifest.iconUrl));
 
-  spinner.succeed();
+  spinner.succeed('Copied files');
 
   spinner.start('Compressing the project');
+
   const zipPath = await zip();
 
-  spinner.succeed();
+  spinner.succeed('Compressed the project');
 
   const { assetUrl, releaseUrl } = await release({ changelog, tagName, version, zipPath });
 
@@ -157,6 +159,31 @@ async function publish () {
   console.log(`\n  You have to accept ${requestIds.length} requests in order to finish the process.\n`);
 
   await follow(requestIds);
+}
+
+async function updateManifest (version) {
+  // Delete dev local_url field
+  if (manifest.localUrl) {
+    delete manifest.localUrl;
+  }
+
+  if (manifest['local_url']) {
+    delete manifest['local_url'];
+  }
+
+  // Copy fields from package.json file
+  manifest.author = appPackage.author || '';
+  manifest.version = version;
+
+  if (!manifest.description) {
+    manifest.description = appPackage.description || '';
+  }
+
+  if (!manifest.name) {
+    manifest.name = appPackage.name || '';
+  }
+
+  await fs.writeFile(path.join(DAPP_DIRECTORY, 'manifest.json'), JSON.stringify(manifest, null, 2));
 }
 
 async function zip () {
