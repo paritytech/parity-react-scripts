@@ -44,6 +44,7 @@ function isHex (value) {
 }
 
 async function publish () {
+  // Ensure the API is availble
   await setup();
 
   // Verify that the Github token is available
