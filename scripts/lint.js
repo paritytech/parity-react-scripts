@@ -39,11 +39,11 @@ async function aspawn (command, args) {
 }
 
 async function lint () {
-  const args = process.argv.length > 3
+  const eslintArgs = process.argv.length > 3
     ? process.argv.slice(3)
     : [ 'src' ];
 
-  args.push('--cache');
+  eslintArgs.push('--cache');
 
   const dappEslint = path.resolve(DAPP_DIRECTORY, './node_modules/.bin/eslint');
   const selfEslint = path.resolve(__dirname, './node_modules/.bin/eslint');
@@ -61,7 +61,7 @@ async function lint () {
 
   const spinner = ora('Linting JS').start();
 
-  await aspawn(eslint, args);
+  await aspawn(eslint, eslintArgs);
   spinner.succeed();
 
   spinner.start('Linting CSS');
