@@ -18,11 +18,17 @@
 
 const path = require('path');
 const paths = require('react-scripts-config/config/paths');
+const fs = require('fs-extra');
+const merge = require('lodash/merge');
 
 const IS_PROD = process.env.NODE_ENV === 'production';
 const appPackage = require(paths.appPackageJson);
 
-module.exports = {
+const configPath =
+  process.env.CONFIG || path.join(paths.appPath, 'parity-react-scripts.config.js');
+const loadedConfig = fs.existsSync(configPath) ? require(configPath) : {};
+
+module.exports = merge({
   devPort: 3001,
   openBrowser: false,
   babel: {
@@ -39,4 +45,4 @@ module.exports = {
     require('postcss-nested'),
     require('postcss-simple-vars')
   ]
-};
+}, loadedConfig);

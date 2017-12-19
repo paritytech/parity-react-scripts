@@ -41,9 +41,7 @@ async function aspawn (command, args) {
 async function lint () {
   const eslintArgs = process.argv.length > 3
     ? process.argv.slice(3)
-    : [ 'src' ];
-
-  eslintArgs.push('--cache');
+    : [ '--cache', 'src' ];
 
   const dappEslint = path.resolve(DAPP_DIRECTORY, './node_modules/.bin/eslint');
   const selfEslint = path.resolve(__dirname, './node_modules/.bin/eslint');

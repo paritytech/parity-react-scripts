@@ -49,5 +49,13 @@ module.exports = {
     'jsx-quotes': ['error', 'prefer-single'],
     'react/jsx-closing-bracket-location': 'error',
     'react/jsx-curly-spacing': ['error', 'always']
-  }
+  },
+  overrides: [
+    {
+      files: [ '*.spec.js' ],
+      rules: {
+        'no-unused-expressions': 'off'
+      }
+    }
+  ]
 };
