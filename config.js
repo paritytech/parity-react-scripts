@@ -24,8 +24,7 @@ const merge = require('lodash/merge');
 const IS_PROD = process.env.NODE_ENV === 'production';
 const appPackage = require(paths.appPackageJson);
 
-const configPath =
-  process.env.CONFIG || path.join(paths.appPath, 'parity-react-scripts.config.js');
+const configPath = path.join(paths.appPath, 'parity-react-scripts.config.js');
 const loadedConfig = fs.existsSync(configPath) ? require(configPath) : {};
 
 module.exports = merge({
@@ -38,11 +37,14 @@ module.exports = merge({
   htmlPlugin: {
     template: path.resolve(__dirname, './app.index.ejs'),
     injectParity: !IS_PROD,
-    title: appPackage.description
+    title: appPackage.description || ''
   },
   postcssPlugins: [
     require('postcss-import'),
     require('postcss-nested'),
     require('postcss-simple-vars')
-  ]
+  ],
+  webpack: {
+    eslint: false
+  }
 }, loadedConfig);

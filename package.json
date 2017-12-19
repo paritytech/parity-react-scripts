@@ -64,7 +64,7 @@
     "postcss-import": "11.0.0",
     "postcss-nested": "3.0.0",
     "postcss-simple-vars": "4.1.0",
-    "react-scripts-config": "1.0.17-5",
+    "react-scripts-config": "1.0.17-8",
     "release-it": "github:paritytech/release-it#ng-poc",
     "semver": "5.4.1",
     "stylelint": "8.4.0",
