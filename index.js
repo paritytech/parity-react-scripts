@@ -48,7 +48,7 @@ async function main () {
   process.env.RS_SKIP_OWN = 1;
 
   // Set the configuration path
-  process.env.CONFIG = path.resolve(__dirname, 'config.js');
+  process.env.CONFIG = path.resolve(__dirname, 'react-scripts.config.js');
 
   // Run the main React Scripts
   require('react-scripts-config/bin/react-scripts');

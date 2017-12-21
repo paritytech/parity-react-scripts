@@ -32,16 +32,17 @@ module.exports = {
     'transform-decorators-legacy',
     'transform-class-properties',
     'transform-object-rest-spread',
-    'transform-export-extensions',
-
+    'transform-export-extensions'
+  ].concat(
     IS_PROD
       ? [
         'transform-react-remove-prop-types'
       ]
       : [
         'babel-plugin-transform-react-jsx-self',
-        'babel-plugin-transform-react-jsx-source'
+        'babel-plugin-transform-react-jsx-source',
+        'react-hot-loader/babel'
       ]
-  ],
+  ),
   retainLines: true
 };
