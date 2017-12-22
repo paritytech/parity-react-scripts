@@ -20,6 +20,7 @@ const path = require('path');
 const paths = require('react-scripts-config/config/paths');
 const fs = require('fs-extra');
 const merge = require('lodash/merge');
+const CircularDependencyPlugin = require('circular-dependency-plugin');
 
 const IS_PROD = process.env.NODE_ENV === 'production';
 const appPackage = require(paths.appPackageJson);
@@ -45,6 +46,12 @@ module.exports = merge({
     require('postcss-simple-vars')
   ],
   webpack: {
-    eslint: false
+    eslint: false,
+    plugins: [
+      new CircularDependencyPlugin({
+        // add errors to webpack instead of warnings
+        failOnError: true
+      })
+    ]
   }
 }, loadedConfig);

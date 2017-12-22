@@ -42,6 +42,7 @@
     "babel-preset-env": "1.6.1",
     "babel-preset-react": "6.24.1",
     "chalk": "2.3.0",
+    "circular-dependency-plugin": "^4.3.0",
     "eslint": "4.13.1",
     "eslint-config-semistandard": "11.0.0",
     "eslint-config-standard": "10.2.1",
