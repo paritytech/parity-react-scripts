@@ -38,33 +38,45 @@ async function aspawn (command, args) {
   });
 }
 
-async function lint () {
-  const eslintArgs = process.argv.length > 3
+async function lintJS () {
+  const args = process.argv.length > 3
     ? process.argv.slice(3)
     : [ '--cache', 'src' ];
 
   const dappEslint = path.resolve(DAPP_DIRECTORY, './node_modules/.bin/eslint');
   const selfEslint = path.resolve(__dirname, './node_modules/.bin/eslint');
 
-  const dappStylelint = path.resolve(DAPP_DIRECTORY, './node_modules/.bin/stylelint');
-  const selfStylelint = path.resolve(__dirname, './node_modules/.bin/stylelint');
-
   const eslint = fs.existsSync(dappEslint)
     ? dappEslint
     : selfEslint;
+
+  const spinner = ora('Linting JS').start();
+
+  await aspawn(eslint, args);
+  spinner.succeed();
+}
+
+async function lintCSS () {
+  const args = process.argv.length > 3
+    ? process.argv.slice(3)
+    : [ './src/**/*.css', '--cache' ];
+
+  const dappStylelint = path.resolve(DAPP_DIRECTORY, './node_modules/.bin/stylelint');
+  const selfStylelint = path.resolve(__dirname, './node_modules/.bin/stylelint');
 
   const stylelint = fs.existsSync(dappStylelint)
     ? dappStylelint
     : selfStylelint;
 
-  const spinner = ora('Linting JS').start();
+  const spinner = ora('Linting CSS').start();
 
-  await aspawn(eslint, eslintArgs);
-  spinner.succeed();
-
-  spinner.start('Linting CSS');
-  await aspawn(stylelint, [ './src/**/*.css', '--cache' ]);
+  await aspawn(stylelint, args);
   spinner.succeed();
 }
 
-module.exports = lint;
+async function lint () {
+  await lintJS();
+  await lintCSS();
+}
+
+module.exports = { lint, lintJS, lintCSS };

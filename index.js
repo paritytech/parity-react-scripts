@@ -22,7 +22,7 @@ const path = require('path');
 
 const spinner = require('./scripts/spinner');
 const init = require('./scripts/init');
-const lint = require('./scripts/lint');
+const { lint, lintJS, lintCSS } = require('./scripts/lint');
 const publish = require('./scripts/publish');
 
 async function main () {
@@ -31,6 +31,14 @@ async function main () {
   // If linting, spawn a new process and pass all the arguments
   if (command === 'lint') {
     return lint();
+  }
+
+  if (command === 'lint-js') {
+    return lintJS();
+  }
+
+  if (command === 'lint-css') {
+    return lintCSS();
   }
 
   if (command === 'publish') {
