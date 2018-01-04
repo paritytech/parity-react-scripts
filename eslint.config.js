@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Parity.  If not, see <http://www.gnu.org/licenses/>.
 
+const restrictedGlobals = require('eslint-restricted-globals');
+
 module.exports = {
   'extends': [
     'semistandard',
@@ -46,6 +48,7 @@ module.exports = {
     'no-duplicate-imports': ['error', {
       'includeExports': true
     }],
+    'no-restricted-globals': ['error'].concat(restrictedGlobals),
     'jsx-quotes': ['error', 'prefer-single'],
     'react/jsx-closing-bracket-location': 'error',
     'react/jsx-curly-spacing': ['error', 'always']
