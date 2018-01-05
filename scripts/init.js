@@ -82,9 +82,11 @@ async function addScripts () {
     build: 'parity-react-scripts build',
     init: 'parity-react-scripts init',
     lint: 'parity-react-scripts lint',
-    publish: 'parity-react-scripts publish',
+    'lint:css': 'parity-react-scripts lint-css',
+    'lint:js': 'parity-react-scripts lint-js',
+    release: 'parity-react-scripts release',
     start: 'parity-react-scripts start',
-    test: 'npm run lint && parity-react-scripts test'
+    test: 'parity-react-scripts test'
   };
 
   const keys = Object.keys(scripts).filter((key) => dappPackage.scripts[key] !== scripts[key]);

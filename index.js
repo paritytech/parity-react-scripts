@@ -23,7 +23,7 @@ const path = require('path');
 const spinner = require('./scripts/spinner');
 const init = require('./scripts/init');
 const { lint, lintJS, lintCSS } = require('./scripts/lint');
-const publish = require('./scripts/publish');
+const release = require('./scripts/release');
 
 async function main () {
   const command = process.argv[2];
@@ -41,8 +41,8 @@ async function main () {
     return lintCSS();
   }
 
-  if (command === 'publish') {
-    return publish();
+  if (command === 'release') {
+    return release();
   }
 
   if (command === 'init') {

@@ -25,7 +25,7 @@ const semver = require('semver');
 
 const spinner = require('./spinner');
 const { getToken, release } = require('./github');
-const { follow, getAccounts, setup } = require('./api');
+const { follow, getAccounts, setup: setupApi } = require('./api');
 const { getDappOwner, updateDapp } = require('./dapp-utils');
 
 const DAPP_DIRECTORY = fs.realpathSync(process.cwd());
@@ -45,9 +45,26 @@ function isHex (value) {
   return /^0x([0-9a-g]{2})*$/i.test(value);
 }
 
+async function verifyDappOwner (dappId) {
+  const dappOwner = await getDappOwner({ id: dappId });
+  const accounts = (await getAccounts()).map((a) => a.toLowerCase());
+
+  if (!accounts.includes(dappOwner.toLowerCase())) {
+    throw new Error(`This dapp is owned by ${dappOwner}, which is not in your local accounts.`);
+  }
+}
+
 async function publish () {
-  // Ensure the API is availble
-  await setup();
+  const { publishToDappReg } = await inquirer.prompt([ {
+    type: 'confirm',
+    name: 'publishToDappReg',
+    message: 'Do you wish to release your dapp in the Dapp Registry as well? '
+  } ]);
+
+  if (publishToDappReg) {
+    // Ensure the API is availble
+    await setupApi();
+  }
 
   // Verify that the Github token is available
   await getToken();
@@ -68,15 +85,12 @@ async function publish () {
 
   const dappId = manifest.id;
 
-  if (!dappId || !isHex(dappId)) {
-    throw new Error('You must have the `id` field in the Manifest set to a valid dapp id. Please update.');
-  }
+  if (publishToDappReg) {
+    if (!dappId || !isHex(dappId)) {
+      throw new Error('You must have the `id` field in the Manifest set to a valid dapp id. Please update.');
+    }
 
-  const dappOwner = await getDappOwner({ id: dappId });
-  const accounts = (await getAccounts()).map((a) => a.toLowerCase());
-
-  if (!accounts.includes(dappOwner.toLowerCase())) {
-    throw new Error(`This dapp is owned by ${dappOwner}, which is not in your local accounts.`);
+    await verifyDappOwner(dappId);
   }
 
   const { increment } = await inquirer.prompt([ {
@@ -142,23 +156,25 @@ async function publish () {
   spinner.start(`Release published at ${releaseUrl}`).succeed();
   console.log('');
 
-  const baseUrl = releaseUrl
-    .replace('://github.com/', '://raw.githubusercontent.com/')
-    .replace('releases/tag/', '');
+  if (publishToDappReg) {
+    const baseUrl = releaseUrl
+      .replace('://github.com/', '://raw.githubusercontent.com/')
+      .replace('releases/tag/', '');
 
-  const manifestUrl = `${baseUrl}/manifest.json`;
-  const imageUrl = `${baseUrl}/${manifest.iconUrl}`;
+    const manifestUrl = `${baseUrl}/manifest.json`;
+    const imageUrl = `${baseUrl}/${manifest.iconUrl}`;
 
-  const requestIds = await updateDapp({
-    id: dappId,
-    manifest: manifestUrl,
-    image: imageUrl,
-    content: assetUrl
-  });
+    const requestIds = await updateDapp({
+      id: dappId,
+      manifest: manifestUrl,
+      image: imageUrl,
+      content: assetUrl
+    });
 
-  console.log(`\n  You have to accept ${requestIds.length} requests in order to finish the process.\n`);
+    console.log(`\n  You have to accept ${requestIds.length} requests in order to finish the process.\n`);
 
-  await follow(requestIds);
+    await follow(requestIds);
+  }
 }
 
 async function updateManifest (version) {
