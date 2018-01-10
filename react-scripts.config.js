@@ -49,6 +49,8 @@ module.exports = merge({
     eslint: false,
     plugins: [
       new CircularDependencyPlugin({
+        // exclude node modules
+        exclude: /node_modules/,
         // add errors to webpack instead of warnings
         failOnError: true
       })
