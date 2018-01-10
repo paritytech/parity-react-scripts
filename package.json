@@ -1,6 +1,6 @@
 {
   "name": "parity-react-scripts",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "An extension of the react scripts for Parity-based dapps",
   "engines": {
     "node": ">=8"
