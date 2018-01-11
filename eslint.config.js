@@ -14,14 +14,19 @@
 // You should have received a copy of the GNU General Public License
 // along with Parity.  If not, see <http://www.gnu.org/licenses/>.
 
+const path = require('path');
+
+process.env.NODE_PATH = path.resolve(__dirname, './node_modules');
+require('module').Module._initPaths();
+
 const restrictedGlobals = require('eslint-restricted-globals');
 
 module.exports = {
   'extends': [
-    'semistandard',
-    'standard-react'
+    require.resolve('semistandard'),
+    require.resolve('standard-react')
   ],
-  'parser': 'babel-eslint',
+  'parser': require.resolve('babel-eslint'),
   'env': {
     'browser': true,
     'mocha': true,
