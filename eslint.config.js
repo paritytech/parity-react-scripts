@@ -23,8 +23,8 @@ const restrictedGlobals = require('eslint-restricted-globals');
 
 module.exports = {
   'extends': [
-    require.resolve('semistandard'),
-    require.resolve('standard-react')
+    require.resolve('eslint-config-semistandard'),
+    require.resolve('eslint-config-standard-react')
   ],
   'parser': require.resolve('babel-eslint'),
   'env': {
