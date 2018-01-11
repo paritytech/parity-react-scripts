@@ -29,6 +29,7 @@ module.exports = {
   'parser': require.resolve('babel-eslint'),
   'env': {
     'browser': true,
+    'jest': true,
     'mocha': true,
     'node': true
   },
